@@ -484,7 +484,7 @@ const Page = () => {
 
                     <pre className="p-4 text-xs md:text-sm font-mono text-zinc-200/80 overflow-x-auto bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
                       <code>{`<iframe
-      src="https://your-domain.com/devcard/${generatedCardId}"
+      src="https://getdevcard.vercel.app/devcard/${generatedCardId}"
       style="background: transparent;overflow:hidden"
       frameborder="0"
       allowtransparency="true"
@@ -512,7 +512,7 @@ const Page = () => {
                 <div className="flex-1 rounded-lg overflow-hidden border border-white/10">
                   <iframe
                     className="h-full w-full"
-                    src={`https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/${generatedCardId}`}
+                    src={`https://getdevcard.vercel.app/devcard/${generatedCardId}`}
                     style={{ background: "transparent" }}
                     allowtransparency="true"
                     frameBorder="0"

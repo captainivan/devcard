@@ -62,7 +62,7 @@ const LandingPage = () => {
         {/* RIGHT SIDE */}
         <div className="w-full md:w-1/2 flex items-center justify-center px-4 md:px-0 py-6 md:py-0 overflow-hidden">
           <iframe
-            src="https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/1AP7Lufb39OqPNXZbJFY"
+            src="https://getdevcard.vercel.app/devcard/1AP7Lufb39OqPNXZbJFY"
             style={{ backgroundColor: "transparent" }}
             frameborder="0"
             allowtransparency="true"
@@ -144,7 +144,7 @@ const LandingPage = () => {
           <div className="w-full md:w-1/2 flex justify-center items-center  md:px-0 py-6 md:py-0 overflow-hidden">
             <iframe
               id="devcard-frame"
-              src="https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/jPz53L1vRFmmQ3IGo50B"
+              src="https://getdevcard.vercel.app/devcard/jPz53L1vRFmmQ3IGo50B"
               style={{ backgroundColor: "transparent" }}
               frameborder="0"
               allowtransparency="true"
@@ -230,7 +230,7 @@ const LandingPage = () => {
         {/* RIGHT SIDE */}
         <div className="w-full md:w-1/2 flex items-center justify-center mt-8 md:mt-0 overflow-hidden">
           <iframe
-            src="https://3001-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/ozlKVipGuCY5V7rDueCO"
+            src="https://getdevcard.vercel.app/devcard/ozlKVipGuCY5V7rDueCO"
             style={{ backgroundColor: "transparent" }}
             frameborder="0"
             allowtransparency="true"
@@ -243,7 +243,7 @@ const LandingPage = () => {
         {/* LEFT SIDE - Iframe */}
         <div className="w-full md:w-1/2 flex items-center justify-center overflow-hidden">
           <iframe
-            src="https://3001-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/8aiYou9qOLVHaO740fhS"
+            src="https://getdevcard.vercel.app/devcard/8aiYou9qOLVHaO740fhS"
             style={{ backgroundColor: "transparent" }}
             frameborder="0"
             allowtransparency="true"
@@ -298,7 +298,7 @@ const LandingPage = () => {
         {/* RIGHT SIDE - Iframe */}
         <div className="w-full md:w-1/2 flex items-center justify-center mt-8 md:mt-0 overflow-hidden">
           <iframe
-            src="https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/1AP7Lufb39OqPNXZbJFY"
+            src="https://getdevcard.vercel.app/devcard/1AP7Lufb39OqPNXZbJFY"
             style={{ backgroundColor: "transparent" }}
             frameborder="0"
             allowtransparency="true"
@@ -311,7 +311,7 @@ const LandingPage = () => {
         {/* LEFT SIDE - Iframe */}
         <div className="w-full md:w-1/2 flex items-center justify-center overflow-hidden">
           <iframe
-            src="https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/NXRP1CfnjMeq4smLh0Wf"
+            src="https://getdevcard.vercel.app/devcard/NXRP1CfnjMeq4smLh0Wf"
             style={{ backgroundColor: "transparent" }}
             frameborder="0"
             allowtransparency="true"
@@ -367,7 +367,7 @@ const LandingPage = () => {
         {/* RIGHT SIDE - Iframe */}
         <div className="w-full md:w-1/2 flex items-center justify-center mt-8 md:mt-0 overflow-hidden">
           <iframe
-            src="https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/FYOEhhw7V2SIh9UqQNUh"
+            src="https://getdevcard.vercel.app/devcard/FYOEhhw7V2SIh9UqQNUh"
             style={{ backgroundColor: "transparent" }}
             frameborder="0"
             allowtransparency="true"
@@ -380,7 +380,7 @@ const LandingPage = () => {
         {/* LEFT SIDE - Iframe */}
         <div className="w-full md:w-1/2 flex items-center justify-center overflow-hidden">
           <iframe
-            src="https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/6JzrGhGpgO6zVDtMowPs"
+            src="https://getdevcard.vercel.app/devcard/6JzrGhGpgO6zVDtMowPs"
             style={{ backgroundColor: "transparent" }}
             frameborder="0"
             allowtransparency="true"
@@ -435,7 +435,7 @@ const LandingPage = () => {
         {/* RIGHT SIDE - Iframe */}
         <div className="w-full md:w-1/2 flex items-center justify-center mt-8 md:mt-0 overflow-hidden">
           <iframe
-            src="https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/jPz53L1vRFmmQ3IGo50B"
+            src="https://getdevcard.vercel.app/devcard/jPz53L1vRFmmQ3IGo50B"
             style={{ backgroundColor: "transparent" }}
             frameborder="0"
             allowtransparency="true"

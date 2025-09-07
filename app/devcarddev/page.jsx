@@ -31,8 +31,8 @@ const Page = () => {
       "project"
     ],
     contact: {
-      contactName: "devcard.com",
-      contactLink: "https://devcard.com"
+      contactName: "getdevcard",
+      contactLink: "https://getdevcard.vercel.app"
     },
     image: "/images/icon.png",
     theme: {

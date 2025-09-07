@@ -166,9 +166,9 @@ const Page = () => {
 
       setGeneratedCardId(docRef.id);
       alert("Card generated successfully 🎉");
+      localStorage.setItem("GOOGLE_ANALYTICS_COUNTSCORE", count + 1);
       setIsOpen(true);
 
-      localStorage.setItem("GOOGLE_ANALYTICS_COUNTSCORE", count + 1);
     } catch (e) {
       console.error("Error adding document:", e);
       alert("Error adding document");

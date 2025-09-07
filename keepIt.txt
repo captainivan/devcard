@@ -1,0 +1,902 @@
+"use client";
+import styles from "@/app/styles/DevCard.module.css"
+import { Button } from "@/components/ui/button";
+import { Menu, Plus, SendHorizonal, Trash, X } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
+import Image from "next/image";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import Icon from "@/app/images/icon.png"
+import { db } from "../configs/firebase";
+import { addDoc, collection } from "firebase/firestore";
+import { Spinner } from "@/components/ui/shadcn-io/spinner";
+import { motion, AnimatePresence } from "framer-motion";
+import ReCAPTCHA from 'react-google-recaptcha'
+import { CardData } from "./data";
+
+const Page = () => {
+
+
+  const [data, setData] = useState({
+    title: "DevCard.",
+    shortTitle: [
+      "PREMIUM",
+      "STYLISH",
+      "RELATABLE"
+    ],
+    desc: "Design stunning premium developer & business cards instantly for free no signup needed. Customize, brand",
+    badges: [
+      "Web",
+      "Portfolio",
+      "project"
+    ],
+    contact: {
+      contactName: "devcard.com",
+      contactLink: "https://devcard.com"
+    },
+    image: "/images/icon.png",
+    theme: {
+      name: "Obsidian Steel",
+      cardBgColor: "linear-gradient(135deg, rgb(21, 21, 21), rgb(90, 90, 90))",
+      cardShine: `linear-gradient(90deg,rgba(255, 255, 255, 0) 0%,rgba(200, 200, 200, 0.15) 40%,rgba(255, 255, 255, 0.35) 50%,rgba(200, 200, 200, 0.15) 60%,rgba(255, 255, 255, 0) 100%)`,
+      cardTextColor: "#f5f5f5",
+      cardName: "PREMIUM"
+    }
+  })
+  const cardRef = useRef(null);
+  const glossRef = useRef(null);
+  const shineRef = useRef(null);
+  const cardShadowRef = useRef(null);
+  const [puch, setPunch] = useState("")
+  const [badge, setBadge] = useState("")
+  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [generatedCardId, setGeneratedCardId] = useState("");
+  const [limit, setLimit] = useState(false);
+  const [verifyed, setVerified] = useState(false);
+  const [sidePanel, setSidePanel] = useState(false);
+
+  const theme = {
+    bg: "#0b0b0d",
+    glassBorder: "rgba(255,255,255,0.06)",
+    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+  };
+
+  useEffect(() => {
+    if (!cardRef.current) return;
+
+    let bounds = cardRef.current.getBoundingClientRect();
+    function updateBounds() {
+      if (cardRef.current) bounds = cardRef.current.getBoundingClientRect();
+    }
+    window.addEventListener("resize", updateBounds);
+
+    let raf = null;
+    let lastEvent = null;
+
+    function applyTransforms(e) {
+      lastEvent = e;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        if (!bounds) return;
+
+        const { left, top, width, height } = bounds;
+        const x = (lastEvent.clientX - left) / width;
+        const y = (lastEvent.clientY - top) / height;
+
+        // tilt angles
+        const rx = (y - 0.5) * 10;
+        const ry = (x - 0.5) * -15;
+
+        if (cardRef.current) {
+          cardRef.current.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+        }
+
+        // Shine streak
+        const translatePercent = (x - 0.5) * 100;
+        if (shineRef.current) {
+          shineRef.current.style.transform = `rotate(25deg) translateX(${translatePercent}%)`;
+        }
+
+        // Gloss
+        if (glossRef.current) {
+          glossRef.current.style.transform = `translate3d(${(x - 0.5) * 20}px, ${(y - 0.5) * 10}px, 0)`;
+        }
+
+        // Shadow
+        const shadowBlur = 30 + Math.max(Math.abs(rx), Math.abs(ry)) * 2;
+        if (cardShadowRef.current) {
+          cardShadowRef.current.style.boxShadow = `0 ${10 + Math.abs(ry) * 2}px ${30 + shadowBlur}px rgba(2,6,23,0.7)`;
+        }
+
+        if (cardRef.current && !cardRef.current.classList.contains("hovered")) {
+          cardRef.current.classList.add("hovered");
+        }
+      });
+    }
+
+    function handleLeave() {
+      if (cardRef.current) {
+        cardRef.current.classList.remove("hovered");
+        cardRef.current.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
+        cardRef.current.style.transform = "rotateX(0deg) rotateY(0deg)";
+        setTimeout(() => {
+          if (cardRef.current) cardRef.current.style.transition = "";
+        }, 600);
+      }
+      if (shineRef.current) {
+        shineRef.current.style.transform = "rotate(25deg) translateX(-30%)";
+      }
+      if (glossRef.current) {
+        glossRef.current.style.transform = "";
+      }
+      if (cardShadowRef.current) {
+        cardShadowRef.current.style.boxShadow = "0 30px 60px rgba(2,6,23,0.65)";
+      }
+    }
+
+    // ✅ Attach events to `.scene` container only
+    const sceneEl = document.querySelector(".scene");
+    if (sceneEl) {
+      sceneEl.addEventListener("mousemove", applyTransforms);
+      sceneEl.addEventListener("mouseleave", handleLeave);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateBounds);
+      if (sceneEl) {
+        sceneEl.removeEventListener("mousemove", applyTransforms);
+        sceneEl.removeEventListener("mouseleave", handleLeave);
+      }
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const submitcard = async () => {
+    setLoading(true);
+
+    if (
+      !data.title || data.title.length < 1 ||
+      !data.shortTitle || data.shortTitle.length < 1 ||
+      !data.desc || data.desc.length < 10 ||
+      !data.badges || data.badges.length < 1 ||
+      !data.contact.contactName || data.contact.contactName.length < 1 ||
+      !data.contact.contactLink || data.contact.contactLink.length < 1 ||
+      !data.image || data.image.length < 1
+    ) {
+      alert("Please fill all the fields");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const count = Number(localStorage.getItem("GOOGLE_ANALYTICS_COUNTSCORE") || 0);
+
+      if (count >= 3) {
+        alert("You have reached the limit of 3 cards");
+        setLimit(true)
+        return;
+      }
+
+      const docRef = await addDoc(collection(db, "cards"), data);
+      console.log("Document written with ID:", docRef.id);
+
+      setGeneratedCardId(docRef.id);
+      alert("Card generated successfully 🎉");
+      setIsOpen(true);
+
+      localStorage.setItem("GOOGLE_ANALYTICS_COUNTSCORE", count + 1);
+    } catch (e) {
+      console.error("Error adding document:", e);
+      alert("Error adding document");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyCaptcha = async (token) => {
+    try {
+      const api = await fetch("/api/captchaverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const res = await api.json();
+      console.log(res);
+      if (res.data.success == true) {
+        setVerified(true)
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
+  return (
+    <>
+      <div className={styles.container}>
+        <nav className="w-full h-[8%] flex items-center justify-between px-4 bg-black">
+          <div className="flex items-center gap-2">
+            <Image src={Icon} alt="logo" width={50} height={50} />
+            <h1 className="text-white font-bold text-3xl">DevCard.</h1>
+          </div>
+          <Button
+            onClick={() => { }}
+            className="bg-white text-black hover:bg-black hover:text-white px-4 py-2 flex items-center gap-2"
+          >
+            {loading ? <Spinner variant="circle" /> : <>Publish <SendHorizonal /></>}
+          </Button>
+        </nav>
+        <div className={styles.bossContainer}>
+
+          <div className={styles.sceneLeft}>
+            <div className={styles.onlyForMobile}>
+              <div>{sidePanel ? <><X className="text-blue-400 cursor-pointer" size={28} /></> : <><Menu className="text-blue-400 cursor-pointer" /></>}</div>
+            </div>
+            <h2 className={styles.panelTitle}>Card Settings</h2>
+
+            <div className={styles.settingBox}>
+              <Label htmlFor="title">Card Title</Label>
+              <Input id="title" value={data.title} onChange={(e) => setData({ ...data, title: e.target.value })} />
+            </div>
+
+            <div className={styles.settingBox}>
+              <Label>Tagline</Label>
+              <div className={styles.inlineInput}>
+                <Input placeholder="Add tagline" onChange={(e) => setPunch(e.target.value)} />
+                <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setData({ ...data, shortTitle: [...data.shortTitle, puch] })}>
+                  <Plus />
+                </Button>
+              </div>
+              <div className={styles.badgePreview}>
+                {data.shortTitle.map((e, i) => (
+                  <span key={i} className={styles.badge}>
+                    {e}
+                    <Trash size={14} className={styles.trashIcon} onClick={() => setData({ ...data, shortTitle: data.shortTitle.filter((_, j) => j !== i) })} />
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.settingBox}>
+              <Label htmlFor="desc">Description</Label>
+              <textarea
+                id="desc"
+                className={styles.textarea}
+                value={data.desc}
+                onChange={(e) => setData({ ...data, desc: e.target.value })}
+              />
+            </div>
+
+            <div className={styles.settingBox}>
+              <Label>Badges</Label>
+              <div className={styles.inlineInput}>
+                <Input placeholder="Add badge" onChange={(e) => setBadge(e.target.value)} />
+                <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setData({ ...data, badges: [...data.badges, badge] })}>
+                  <Plus />
+                </Button>
+              </div>
+              <div className={styles.badgePreview}>
+                {data.badges.map((e, i) => (
+                  <span key={i} className={styles.badge}>
+                    {e}
+                    <Trash size={14} className={styles.trashIcon} onClick={() => setData({ ...data, badges: data.badges.filter((_, j) => j !== i) })} />
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.settingBox}>
+              <Label htmlFor="contactName">Contact Name</Label>
+              <Input id="contactName" value={data.contact.contactName} onChange={(e) => setData({ ...data, contact: { ...data.contact, contactName: e.target.value } })} />
+
+              <Label htmlFor="contactLink">Contact Link</Label>
+              <Input id="contactLink" value={data.contact.contactLink} onChange={(e) => setData({ ...data, contact: { ...data.contact, contactLink: e.target.value } })} />
+            </div>
+
+            <div className={styles.settingBox}>
+              <Label htmlFor="image">Image</Label>
+              <Input id="image" value={data.image} onChange={(e) => setData({ ...data, image: e.target.value })} />
+            </div>
+
+            <div className={styles.settingBox}>
+              <Label htmlFor="theme">Select Theme</Label>
+              <div className="mt-5 grid grid-cols-4 gap-4">
+                {CardData.map((theme, i) => (
+                  <div
+                    key={i}
+                    className="w-10 h-10 rounded-full shadow-md cursor-pointer border border-transparent hover:border-white hover:scale-110 transition-all duration-300 ease-in-out"
+                    style={{ background: theme.bg }}
+                    onClick={() =>
+                      setData({
+                        ...data,
+                        theme: {
+                          name: theme.name,
+                          cardBgColor: theme.bg,
+                          cardTextColor: theme.text,
+                          cardName: theme.cardName,
+                          cardShine: theme.cardShine,
+                        },
+                      })
+                    }
+                    title={`${theme.name} (${theme.cardName})`}
+                  ></div>
+                ))}
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className={styles.sceneRight}>
+            <div className="scene">
+              <div className="card" ref={cardRef}>
+                <div className="tile" />
+                <div className="gloss" ref={glossRef} />
+                <div className="shine" ref={shineRef} />
+
+                <div className="face front">
+                  <div className="content">
+                    <div className="logo" draggable={false}>
+                      <img src={data.image || Icon} draggable={false} alt="logo" width={60} height={60}></img>
+                    </div>
+
+                    <div className="meta">
+                      <div className="name">{data.title}</div>
+                      <div className="role">
+                        {data.shortTitle.map((e, i) => (
+                          <span key={i} className="role">
+                            {e}{i < data.shortTitle.length - 1 && " • "}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="desc">
+                        {data.desc}
+                      </div>
+                      <div className="badges">
+                        {data.badges.map((e, i) => (
+                          <div className="badge" key={i}>{e}</div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="footer">
+                    <a className="code" rel="noreferrer" href={data.contact.contactLink} target="_blank">{data.contact.contactName}</a>
+                    <div style={{ opacity: 0.9, fontWeight: 700, letterSpacing: "1px" }}>{data.theme.cardName}</div>
+                  </div>
+                </div>
+
+                <div className="card-shadow" ref={cardShadowRef} />
+              </div>
+              <style jsx>{`
+        .scene {
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+          color: ${data.theme.cardTextColor};
+          -webkit-font-smoothing: antialiased;
+          font-family: ${theme.fontFamily};
+        }
+
+        .card {
+          width: 420px;
+          height: 240px;
+          border-radius: 18px;
+          position: relative;
+          transform-style: preserve-3d;
+          transition: transform 300ms ease, box-shadow 300ms ease;
+          background: ${data.theme.cardBgColor};
+          border: 1px solid ${theme.glassBorder};
+          box-shadow: 0 20px 50px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+          overflow: hidden;
+        }
+
+        .card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(100deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.02) 100%);
+          mix-blend-mode: overlay;
+          pointer-events: none;
+        }
+        
+        .shine {
+          position: absolute;
+          inset: -50% -30% auto -30%;
+          height: 200%;
+          transform: rotate(25deg) translateX(-30%);
+          background:${data.theme.cardShine};
+          filter: blur(18px);
+          opacity: 0.0;
+          transition: opacity 300ms ease, transform 120ms linear;
+          pointer-events: none;
+        }
+        .card.hovered .shine { opacity: 0.9; }
+
+        .gloss {
+          position: absolute;
+          right: -40%;
+          top: -20%;
+          width: 220%;
+          height: 140%;
+          background: conic-gradient(from 180deg at 50% 50%, rgba(255,255,255,0.02), rgba(255,255,255,0.08));
+          mix-blend-mode: overlay;
+          filter: blur(18px);
+          transition: transform 400ms ease;
+          pointer-events: none;
+        }
+
+        .face { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 22px; }
+        .content { display: flex; gap: 18px; align-items: center; width: 100%; }
+        .logo {
+          width: 92px; height: 92px; border-radius: 16px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+          border: 1px solid rgba(255,255,255,0.04);
+          display:flex; align-items:center; justify-content:center;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.6), inset 0 -6px 30px rgba(0,0,0,0.25);
+        }
+        .logo svg { width:60px; height:60px; }
+        .meta { flex:1; }
+        .name { font-size:20px; font-weight:700; margin-bottom:6px; }
+        .role { font-size:13px; color:${data.theme.cardTextColor}; margin-bottom:12px; opacity:0.8;}
+        .desc { font-size:13px; line-height:1.20; color:${data.theme.cardTextColor}; }
+        .badges { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+        .badge {
+          padding:6px 10px; border-radius:999px; font-size:12px; font-weight:600;
+          background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
+          border:1px solid ${data.theme.cardTextColor};
+          opacity:0.8;
+        }
+        .footer { position:absolute; left:22px; right:22px; bottom:10px; display:flex; align-items:center; justify-content:space-between; }
+        .code { font-family:monospace; font-size:12px; color:${data.theme.cardTextColor}; }
+        .card-shadow { position:absolute; inset:0; border-radius:18px; box-shadow:0 30px 60px rgba(2,6,23,0.65); pointer-events:none; }
+        .tile { position:absolute; left:-40px; top:-40px; width:140px; height:140px; transform:rotate(25deg); background:linear-gradient(135deg, rgba(155,211,255,0.02), rgba(255,209,102,0.02)); filter:blur(8px); }
+      `}</style>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      {isOpen && (
+        <AnimatePresence>
+          {/* Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 50 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className={styles.popupContainer}
+            >
+              {/* Left Side */}
+              <div className="flex flex-col justify-between w-[45%]">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">🎉 Congratulations!</h1>
+                  <p className="text-lg text-zinc-300">
+                    You’ve successfully generated your DevCard.
+                  </p>
+                  <p className="text-sm mt-4 text-zinc-400 leading-relaxed">
+                    Copy the iframe code below and embed it anywhere — your portfolio,
+                    profile, or even your SaaS website.
+                  </p>
+
+                  {/* Code Box */}
+                  <div className="mt-6 rounded-lg overflow-hidden border border-white/10 bg-black/60">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-zinc-800 text-sm text-zinc-400 font-mono">
+                      <span className="h-3 w-3 rounded-full bg-red-500" />
+                      <span className="h-3 w-3 rounded-full bg-yellow-500" />
+                      <span className="h-3 w-3 rounded-full bg-green-500" />
+                      <span className="ml-2">devcard.html</span>
+                    </div>
+
+                    <pre className="p-4 text-sm font-mono text-zinc-200/80 overflow-x-auto bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+                      <code>{`<iframe
+  src="https://your-domain.com/devcard/${generatedCardId}"
+  style="background: transparent;"
+  frameborder="0"
+  allowtransparency="true"
+  height="400"
+  width="600"
+></iframe>`}</code>
+                    </pre>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side */}
+              <div className="flex flex-col w-[55%]">
+                {/* Close Button */}
+                <div className="flex justify-end mb-2">
+                  <Button
+                    onClick={() => setIsOpen(false)}
+                    className="p-2 bg-red-500 text-white rounded-full h-10 w-10 flex items-center justify-center hover:bg-red-600 transition"
+                  >
+                    <X />
+                  </Button>
+                </div>
+
+                {/* Preview Frame */}
+                <div className="flex-1 rounded-lg overflow-hidden border border-white/10">
+                  <iframe
+                    className="h-full w-full"
+                    src={`https://3000-firebase-card-1756884857407.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/devcard/${generatedCardId}`}
+                    style={{ background: "transparent" }}
+                    allowtransparency="true"
+                    frameBorder="0"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+      )}
+      {limit && (
+        <AnimatePresence>
+          {/* Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 50 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className={styles.popupContainer}
+            >
+              {/* Left Side */}
+              <div className="flex flex-col justify-between w-[45%]">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Soory! 😔</h1>
+                  <p className="text-lg text-zinc-300">
+                    You’ve Reached Your Cards Creating Limit.
+                  </p>
+                  <p className="text-sm mt-4 text-zinc-400 leading-relaxed">
+                    We are not trying to make any money  DevCard is free, but to prevent spam we have given access to create only three cards per user.
+                  </p>
+                </div>
+              </div>
+
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+      )}
+      {/* {verifyed ? <></> :
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 ">
+          <div className="p-5 rounded-lg bg-black text-white">
+            <h1 className="mb-5 font-bold">Please Fill The ReCaptcha</h1>
+            <ReCAPTCHA
+              sitekey={process.env.NEXT_PUBLIC_SITE_KEY}
+              onChange={(token) => verifyCaptcha(token)}
+            />
+          </div>
+        </div>
+      } */}
+
+    </>
+  );
+};
+
+export default Page;
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+.container{
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.bossContainer{
+  height: 92%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sceneLeft {
+  height: 100%;
+  width: 25%;
+  background: linear-gradient(180deg, #0f0f12, #1a1a1d);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.panelTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f9fafb;
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+}
+
+.settingBox {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: all 0.25s ease;
+}
+
+.settingBox:hover {
+  border-color: rgba(59,130,246,0.6);
+  box-shadow: 0 4px 14px rgba(59,130,246,0.25);
+}
+
+.settingBox label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #d1d5db;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.inlineInput {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.textarea,
+.sceneLeft input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(30, 30, 35, 0.9);
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #f9fafb;
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.textarea:focus,
+.sceneLeft input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.4);
+  background: rgba(40, 40, 45, 0.95);
+}
+
+.textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+/* Badge styling */
+.badgePreview {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #f3f4f6;
+  transition: all 0.2s ease;
+}
+
+.badge:hover {
+  background: rgba(59,130,246,0.2);
+  border-color: rgba(59,130,246,0.5);
+}
+
+.trashIcon {
+  cursor: pointer;
+  color: #9ca3af;
+  transition: color 0.2s ease;
+}
+
+.trashIcon:hover {
+  color: #ef4444;
+}
+
+.sceneLeft {
+  height: 100%;
+  width: 25%;
+  background: linear-gradient(180deg, #0f0f12, #1a1a1d);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
+  scroll-behavior: smooth;
+}
+
+.sceneLeft::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sceneLeft::-webkit-scrollbar-track {
+  background: rgba(20, 20, 25, 0.7);
+  border-radius: 8px;
+}
+
+.sceneLeft::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 130, 0.6);
+  border-radius: 8px;
+}
+
+.sceneLeft::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 160, 0.8);
+}
+
+.sceneLeft::-webkit-scrollbar-button {
+  display: none;
+}
+
+.sceneLeft {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120,120,130,0.6) rgba(20,20,25,0.7);
+}
+
+.themeCircle,.themeCircleOne,.themeCircleTwo,.themeCircleThree,.themeCircleFour,.themeCircleFive,.themeCircleSix
+{
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  margin: 5px;
+}
+.themeCircle{
+  background: linear-gradient(135deg, rgb(21, 21, 21), rgb(90, 90, 90));
+}
+.themeCircleOne{
+  background: linear-gradient(135deg, rgb(120, 90, 30), rgb(200, 160, 70));
+}
+.themeCircleTwo{
+  background: linear-gradient(135deg, rgb(180, 185, 190), rgb(240, 245, 250));
+}
+.themeCircleThree{
+  background: linear-gradient(135deg, rgb(110, 70, 30), rgb(190, 120, 70));
+}
+.themeCircleFour{
+  background: linear-gradient(135deg, rgb(20, 50, 40), rgb(60, 120, 90));
+}
+.themeCircleFive{
+  background: linear-gradient(135deg, rgb(40, 30, 70), rgb(100, 60, 150));
+}
+.themeCircleSix{
+  background: linear-gradient(135deg, rgb(70, 20, 30), rgb(150, 60, 90));
+}
+
+
+
+.sceneRight{
+  height: 100%;
+  width: 75%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+}
+
+.nav{
+  width: 100%;
+  height: 8%;
+  background-color: rgb(0, 0, 0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.logoDiv {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.logoDiv h1{
+  color: white;
+  font-weight: 700;
+  margin-left: 5px;
+  font-size: 30px;
+}
+.publishButton{
+  background-color: white;
+  color: black;
+  cursor: pointer;
+  padding: 10px;
+  cursor:pointer;
+}
+.publishButton:hover{
+  border: 2px solid white;
+  color: white;
+  background-color: black;
+}
+
+.popupContainer {
+  position: relative;
+  height: 70%;
+  width: 70%;
+  padding: 1.5rem; /* p-6 */
+  border-radius: 1rem; /* rounded-2xl */
+  display: flex;
+  gap: 1.5rem; /* gap-6 */
+  color: white;
+  background-color: #18181b; /* bg-zinc-900 */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* border-white/10 */
+
+  /* Shadow glow */
+  box-shadow:
+    0 0 40px rgba(59, 130, 246, 0.6),
+    0 0 80px rgba(139, 92, 246, 0.5),
+    0 0 120px rgba(236, 72, 153, 0.4);
+
+  /* Enable scrolling with custom scrollbar */
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+.popupContainer::-webkit-scrollbar {
+  width: 2px;
+}
+
+.popupContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.popupContainer::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 9999px;
+}
+
+.popupContainer::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Firefox */
+.popupContainer {
+  scrollbar-width: none;
+  scrollbar-color: #444 transparent;
+}
+
+.checkbox{
+  height: 400px;
+  width: fit-content;
+}
+
+.onlyForMobile{
+  width: 100%;
+  display: flex;
+  justify-content: end;
+  padding: 10px;
+}

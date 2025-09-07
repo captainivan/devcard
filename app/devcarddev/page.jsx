@@ -162,7 +162,6 @@ const Page = () => {
       }
 
       const docRef = await addDoc(collection(db, "cards"), data);
-      console.log("Document written with ID:", docRef.id);
 
       setGeneratedCardId(docRef.id);
       alert("Card generated successfully 🎉");
@@ -185,7 +184,6 @@ const Page = () => {
         body: JSON.stringify({ token }),
       });
       const res = await api.json();
-      console.log(res);
       if (res.data.success == true) {
         setVerified(true)
       }

@@ -275,7 +275,7 @@ const Page = () => {
 
             <div className={styles.settingBox}>
               <Label htmlFor="image">Image</Label>
-              <Input id="image" value={data.image} onChange={(e) => setData({ ...data, image: e.target.value })} />
+              <Input placeholder="60X60 a recommended size" id="image" value={data.image} onChange={(e) => setData({ ...data, image: e.target.value })} />
             </div>
 
             <div className={styles.settingBox}>

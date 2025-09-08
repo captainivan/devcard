@@ -29,6 +29,24 @@ const LandingPage = () => {
                 CREATE MY DEVCARD
               </button>
             </Link>
+            <a
+              href="https://www.producthunt.com/products/devcard-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-devcard-2"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open DevCard on Product Hunt (opens in new tab)"
+              className="inline-block mt-4"
+            >
+              <img
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1014253&theme=dark&t=1757351837274"
+                alt="DevCard - Showcase your developer profile with digital premium cards | Product Hunt"
+                width={250}
+                height={54}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-auto max-w-[250px] sm:max-w-[300px] md:max-w-[340px] lg:max-w-[420px] object-contain"
+                style={{ display: 'block' }}
+              />
+            </a>
 
             {/* Ratings & Icons */}
             <div className="flex mt-7 flex-wrap items-center justify-center md:justify-start">

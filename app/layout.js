@@ -20,6 +20,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="ccf2ae1f-7c90-4c6c-99a7-1daa4b73595a"></script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

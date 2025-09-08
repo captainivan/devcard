@@ -46,6 +46,8 @@ const Page = () => {
   const cardRef = useRef(null);
   const glossRef = useRef(null);
   const shineRef = useRef(null);
+  const tagRef = useRef(null);
+  const badgeRef = useRef(null);
   const cardShadowRef = useRef(null);
   const [puch, setPunch] = useState("")
   const [badge, setBadge] = useState("")
@@ -193,6 +195,7 @@ const Page = () => {
   };
 
 
+
   return (
     <>
       <div className={styles.container}>
@@ -216,16 +219,28 @@ const Page = () => {
 
             <div className={styles.settingBox}>
               <Label htmlFor="title">Card Title</Label>
-              <Input id="title" value={data.title} onChange={(e) => setData({ ...data, title: e.target.value })} />
+              <Input id="title" maxLength={15} value={data.title} onChange={(e) => setData({ ...data, title: e.target.value })} />
             </div>
 
             <div className={styles.settingBox}>
               <Label>Tagline</Label>
               <div className={styles.inlineInput}>
-                <Input placeholder="Add tagline" onChange={(e) => setPunch(e.target.value)} />
-                <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setData({ ...data, shortTitle: [...data.shortTitle, puch] })}>
-                  <Plus />
-                </Button>
+                {
+                  data.shortTitle.length >= 3 ? (
+                    <>
+                      <Input placeholder="Max 3 taglines" maxLength={10} onChange={(e) => setPunch(e.target.value)} />
+                      <Button className="cursor-not-allowed bg-white/50 hover:bg-white/50" size="icon" variant="outline">
+                        <Plus />
+                      </Button>
+                    </>) : (
+                    <>
+                      <Input ref={tagRef} placeholder="Add tagline" maxLength={10} onChange={(e) => setPunch(e.target.value)} />
+                      <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => { setData({ ...data, shortTitle: [...data.shortTitle, puch] }); tagRef.current.value = "" }}>
+                        <Plus />
+                      </Button>
+                    </>)
+                }
+
               </div>
               <div className={styles.badgePreview}>
                 {data.shortTitle.map((e, i) => (
@@ -242,6 +257,7 @@ const Page = () => {
               <textarea
                 id="desc"
                 className={styles.textarea}
+                maxLength={110}
                 value={data.desc}
                 onChange={(e) => setData({ ...data, desc: e.target.value })}
               />
@@ -250,10 +266,22 @@ const Page = () => {
             <div className={styles.settingBox}>
               <Label>Badges</Label>
               <div className={styles.inlineInput}>
-                <Input placeholder="Add badge" onChange={(e) => setBadge(e.target.value)} />
-                <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setData({ ...data, badges: [...data.badges, badge] })}>
-                  <Plus />
-                </Button>
+                {
+                  data.badges.length >= 3 ?
+                    (<>
+                      <Input maxLength={10} placeholder="Max 3 Badge" onChange={(e) => setBadge(e.target.value)} />
+                      <Button className="cursor-not-allowed bg-white/50 hover:bg-white/50" size="icon" variant="outline">
+                        <Plus />
+                      </Button>
+                    </>)
+                    :
+                    (<>
+                      <Input ref={badgeRef} maxLength={10} placeholder="Add badge" onChange={(e) => setBadge(e.target.value)} />
+                      <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => { setData({ ...data, badges: [...data.badges, badge] }); badgeRef.current.value = "" }}>
+                        <Plus />
+                      </Button>
+                    </>)
+                }
               </div>
               <div className={styles.badgePreview}>
                 {data.badges.map((e, i) => (
@@ -267,7 +295,7 @@ const Page = () => {
 
             <div className={styles.settingBox}>
               <Label htmlFor="contactName">Contact Name</Label>
-              <Input id="contactName" value={data.contact.contactName} onChange={(e) => setData({ ...data, contact: { ...data.contact, contactName: e.target.value } })} />
+              <Input maxLength={15} id="contactName" value={data.contact.contactName} onChange={(e) => setData({ ...data, contact: { ...data.contact, contactName: e.target.value } })} />
 
               <Label htmlFor="contactLink">Contact Link</Label>
               <Input id="contactLink" value={data.contact.contactLink} onChange={(e) => setData({ ...data, contact: { ...data.contact, contactLink: e.target.value } })} />
@@ -547,6 +575,7 @@ const Page = () => {
         </div>
 
       )}
+
       {verifyed ? <></> :
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 ">
           <div className="p-5 rounded-lg bg-black text-white"
@@ -566,6 +595,7 @@ const Page = () => {
           </div>
         </div>
       }
+
 
     </>
   );
